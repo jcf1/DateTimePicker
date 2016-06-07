@@ -1,0 +1,146 @@
+div.clock {
+    position: relative;
+    display: inline-block;
+}
+
+div.date-picker {
+  font-size:24px;
+  font-family:"Times New Roman";
+  box-sizing:border-box;
+}
+div.date-picker * {
+    box-sizing:border-box;
+}
+div.date-picker div.meeting-button {
+  font-size:20px;
+  font-family:"Times New Roman";
+  width: 150px;
+  height: 30px;
+  padding-left: 10px;
+  outline: #244152 solid thin;
+}
+div.date-picker button.undo-button {
+  position: absolute;
+  top: 490px;
+}
+div.date-picker button.next-button {
+  position: absolute;
+  top: 540px;
+}
+div.date-picker span.instruction-label {
+  position: absolute;
+  top: 440px;
+}
+div.date-picker span.start-date-label {
+  position: absolute;
+  top: 590px;
+}
+div.date-picker span.end-date-label {
+  position: absolute;
+  top: 640px;
+}
+div.date-picker div.calendar {
+  position: absolute;
+  z-index: 10;
+  background: white;
+  width: 800px;
+  padding: 5px;
+  color: #244152;
+  border-radius: 3px;
+  height: 420px;
+  outline: #244152 solid thin;
+  overflow: hidden;
+}
+div.date-picker div.calendar div.month-header {
+  float: left;
+  width: 100%;
+  display: -webkit-flex;
+  display: flex;
+  -webkit-justify-content: space-between;
+  justify-content: space-between;
+  align-items: center;
+}
+div.date-picker div.calendar div.month-header > i {
+  font-weight: bold;
+  padding: 5px 8px;
+  border-radius: 3px;
+  cursor: pointer;
+  font-style:normal;
+  font-size:0.7em;
+}
+div.date-picker div.calendar div.week-header {
+  float: left;
+  width: 100%;
+  margin-top: 8px;
+  display: table;
+  padding-bottom: 3px;
+  border-bottom: solid 1px #CCC;
+  margin-bottom: 3px;
+}
+div.date-picker div.calendar div.week-header > span {
+  float: left;
+  width: 14%;
+  font-size: 0.6em;
+  text-transform: uppercase;
+  color: #026aa7;
+  font-weight: bold;
+  text-align: center;
+}
+div.date-picker div.calendar div.grid {
+  float: left;
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+  height: 350px;
+}
+div.date-picker div.calendar div.grid > div {
+  position: absolute;
+  width: 800px;
+}
+div.date-picker div.calendar div.grid > div.current {
+  left: 0;
+}
+div.date-picker div.calendar div.grid div.row {
+  float: left;
+  width: 100%;
+  height: 70px;
+}
+div.date-picker div.calendar div.grid div.row div.day {
+  float: left;
+  width: 14%;
+  height: 70px;
+  font-size: 1.0em;
+  padding: 4px 0;
+  cursor: pointer;
+  text-align: center;
+  border: solid 1px #000000;
+}
+div.date-picker div.calendar div.grid div.row div.day:hover {
+  background: #EAEAEA;
+}
+div.date-picker div.calendar div.grid div.row div.day.other-month {
+  color: #AAA;
+}
+div.date-picker div.calendar div.grid div.row div.day.disabled {
+  color: #E0E0E0;
+  cursor: default;
+}
+div.date-picker div.calendar div.grid div.row div.day.disabled:hover {
+  background: transparent !important;
+}
+div.date-picker div.calendar div.grid div.row div.day.today {
+  background: #1a1aff;
+  color: white;
+}
+div.date-picker div.calendar div.grid div.row div.day.selected {
+  background: #ff751a;
+  color: white;
+}
+div.date-picker div.calendar div.grid div.row div.day.start {
+  background: #33cc33;
+  color: white;
+}
+div.date-picker div.calendar div.grid div.row div.day.end {
+  background: #ff0000;
+  color: white;
+}
