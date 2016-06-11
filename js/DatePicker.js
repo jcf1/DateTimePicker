@@ -243,26 +243,36 @@ var MeetingList = React.createClass({
 
 var TimePicker = React.createClass({
   getInitialState: function() {
+    var date = new Date(),
+    initHour = date.getHours() % 12;
+
+    if(initHour === 0) initHour = 12;
+
     return {
-      startHour: null,
-      startMinute: null,
-      startMeridiem: null,
-      endHour: null,
-      endMinute: null,
-      endMeridiem: null,
+      startHour: initHour,
+      startMinute: date.getMinutes(),
+      startMeridiem: date.getHours() < 12 ? false : true,
+      endHour: initHour,
+      endMinute: date.getMinutes(),
+      endMeridiem: date.getHours() < 12 ? false : true,
       comment: "Meeting",
       shouldHide: true
     }
   },
 
   reset: function() {
+    var date = new Date(),
+    initHour = date.getHours() % 12;
+
+    if(initHour === 0) initHour = 12;
+
     this.setState({
-      startHour: null,
-      startMinute: null,
-      startMeridiem: null,
-      endHour: null,
-      endMinute: null,
-      endMeridiem: null,
+      startHour: initHour,
+      startMinute: date.getMinutes(),
+      startMeridiem: date.getHours() < 12 ? false : true,
+      endHour: initHour,
+      endMinute: date.getMinutes(),
+      endMeridiem: date.getHours() < 12 ? false : true,
       comment: "Meeting"
     });
   },
@@ -316,8 +326,21 @@ var TimePicker = React.createClass({
       return;
     }
 
-    var sHour = this.state.startHour + (this.state.startMeridiem ? 12 : 0),
-    eHour = this.state.endHour + (this.state.endMeridiem ? 12 : 0);
+    var sHour, eHour;
+
+    if(this.state.startHour === 12) {
+      if(this.state.startMeridiem) sHour = 12;
+      else sHour = 0;
+    } else {
+      sHour = this.state.startHour + (this.state.startMeridiem? 12 : 0);
+    }
+
+    if(this.state.endHour === 12) {
+      if(this.state.endMeridiem) eHour = 12;
+      else eHour = 0;
+    } else {
+      eHour = this.state.endHour + (this.state.endMeridiem? 12 : 0);
+    }
 
     var sDate = new Date(this.props.startDate.getFullYear(), this.props.startDate.getMonth(), this.props.startDate.getDate(), sHour, this.state.startMinute),
     eDate = new Date(this.props.endDate.getFullYear(), this.props.endDate.getMonth(), this.props.endDate.getDate(), eHour, this.state.endMinute);
@@ -338,11 +361,11 @@ var TimePicker = React.createClass({
     if(this.state.shouldHide) return null;
 
     return React.createElement("div", {className: "time-picker"},
-    React.createElement("span", null, "Enter Start Time:  "),
-    React.createElement(StartClock, {setHour: this.setStartHour, setMinute: this.setStartMinute, setMeridiem: this.setStartMeridiem}),
+    React.createElement("span", {className: "start-time-label"}, "Enter Start Time:  "),
+    React.createElement(StartClock, {hour: this.state.startHour, minute: this.state.startMinute, meridiem: this.state.startMeridiem, setHour: this.setStartHour, setMinute: this.setStartMinute, setMeridiem: this.setStartMeridiem}),
     React.createElement("br", null),
-    React.createElement("span", null, "Enter End Time  :  "),
-    React.createElement(EndClock, {setHour: this.setEndHour, setMinute: this.setEndMinute, setMeridiem: this.setEndMeridiem}),
+    React.createElement("span", {className: "end-time-label"}, "Enter End Time  :  "),
+    React.createElement(EndClock, {hour: this.state.endHour, minute: this.state.endMinute, meridiem: this.state.endMeridiem, setHour: this.setEndHour, setMinute: this.setEndMinute, setMeridiem: this.setEndMeridiem}),
     React.createElement("br", null),
     React.createElement("span", null, "Enter Comment   :  "),
     React.createElement("input", {type: "text", value: this.state.comment, onChange: this.handleTextChange}),
@@ -354,13 +377,13 @@ var TimePicker = React.createClass({
 
 var StartClock = React.createClass({
   render: function() {
-    return React.createElement(Clock, {prefix: "start", classId: "start-clock", setHour: this.props.setHour, setMinute: this.props.setMinute, setMeridiem: this.props.setMeridiem});
+    return React.createElement(Clock, {prefix: "start", classId: "start-clock", hour: this.props.hour, minute: this.props.minute, meridiem: this.props.meridiem, setHour: this.props.setHour, setMinute: this.props.setMinute, setMeridiem: this.props.setMeridiem});
   }
 });
 
 var EndClock = React.createClass({
   render: function() {
-    return React.createElement(Clock, {prefix: "end", classId: "end-clock", setHour: this.props.setHour, setMinute: this.props.setMinute, setMeridiem: this.props.setMeridiem});
+    return React.createElement(Clock, {prefix: "end", classId: "end-clock", hour: this.props.hour, minute: this.props.minute, meridiem: this.props.meridiem, setHour: this.props.setHour, setMinute: this.props.setMinute, setMeridiem: this.props.setMeridiem});
   }
 });
 
@@ -369,71 +392,91 @@ var Clock = React.createClass({
 
   getInitialState: function() {
     return {
-      hour: null,
-      minute: null,
-      meridiem: null,
+      hour: this.props.hour,
+      minuteTen: Math.floor(this.props.minute/10),
+      minuteOne: this.props.minute%10,
+      meridiem: this.props.meridiem,
       zone: ""
     }
   },
 
-  changeHour: function() {
-    if(this.state.hour === null)
-      document.getElementById(this.props.prefix+"-hour-menu").remove(0);
-    this.setState({hour: parseInt(document.getElementById(this.props.prefix+"-hour-menu").value)});
-    this.props.setHour(parseInt(document.getElementById(this.props.prefix+"-hour-menu").value));
+  changeHour: function(isUp) {
+    var newHour = this.state.hour;
+    if(isUp) {
+      if(newHour === 12) newHour = 1;
+      else newHour += 1;
+    }
+    else if(!isUp) {
+      if(newHour === 1) newHour = 12;
+      else newHour -= 1;
+    }
+    this.setState({hour: newHour});
+    this.props.setHour(newHour);
   },
 
-  changeMinute: function() {
-    if(this.state.minute === null)
-      document.getElementById(this.props.prefix+"-minute-menu").remove(0);
-    this.setState({minute: parseInt(document.getElementById(this.props.prefix+"-minute-menu").value)});
-    this.props.setMinute(parseInt(document.getElementById(this.props.prefix+"-minute-menu").value));
+  changeMinuteTen: function(isUp) {
+    var newMinuteTen = this.state.minuteTen;
+    if(isUp){
+        if(newMinuteTen === 5) newMinuteTen = 0;
+        else newMinuteTen += 1;
+    }
+    else if(!isUp){
+      if(newMinuteTen === 0) newMinuteTen = 5;
+      else newMinuteTen -= 1;
+    }
+
+    this.setState({minuteTen: newMinuteTen});
+    this.props.setMinute(newMinuteTen + this.state.minuteOne);
+  },
+
+  changeMinuteOne: function(isUp) {
+    var newMinuteOne = this.state.minuteOne;
+    if(isUp){
+        if(newMinuteOne === 9) newMinuteOne = 0;
+        else newMinuteOne += 1;
+    }
+    else if(!isUp){
+      if(newMinuteOne === 0) newMinuteOne = 9;
+      else newMinuteOne -= 1;
+    }
+
+    this.setState({minuteOne: newMinuteOne});
+    this.props.setMinute(this.state.minuteTen + newMinuteOne);
   },
 
   changeMeridiem: function() {
-    if(this.state.meridiem === null)
-      document.getElementById(this.props.prefix+"-meridiem-menu").remove(0);
-    this.setState({meridiem: (document.getElementById(this.props.prefix+"-meridiem-menu").value === "pm")});
-    this.props.setMeridiem(document.getElementById(this.props.prefix+"-meridiem-menu").value === "pm");
+    var newMeridiem = !this.state.meridiem;
+    this.setState({meridiem: newMeridiem});
+    this.props.setMeridiem(newMeridiem);
   },
 
   render: function() {
-    var date = new Date();
-    var minutes = Array.apply(null, {length: 60}).map(Number.call, Number);
-    var minuteString = this.state.minute < 10 ? "0" + this.state.minute : this.state.minute.toString();
-
     return React.createElement("div", {className: "clock"},
-    React.createElement("select", {onChange: this.changeHour, id: this.props.prefix+"-hour-menu", class: "hour-menu", className: "hour-menu"},
-      React.createElement("option", {selected: "selected"}, "hour"),
-      React.createElement("option", {href: "#"}, "1"),
-      React.createElement("option", {href: "#"}, "2"),
-      React.createElement("option", {href: "#"}, "3"),
-      React.createElement("option", {href: "#"}, "4"),
-      React.createElement("option", {href: "#"}, "5"),
-      React.createElement("option", {href: "#"}, "6"),
-      React.createElement("option", {href: "#"}, "7"),
-      React.createElement("option", {href: "#"}, "8"),
-      React.createElement("option", {href: "#"}, "9"),
-      React.createElement("option", {href: "#"}, "10"),
-      React.createElement("option", {href: "#"}, "11"),
-      React.createElement("option", {href: "#"}, "12")
+
+    React.createElement("div", {className: "hour-menu"},
+    React.createElement("button", {onClick: this.changeHour.bind(null, true), className: "hour-up"}, "^"),
+    React.createElement("div", {id: this.props.prefix+"-hour-display", className: "hour-display"}, this.state.hour),
+    React.createElement("button", {onClick: this.changeHour.bind(null, false), className: "hour-down"}, "v")
     ),
 
-    React.createElement("span", null, " : "),
+    React.createElement("span", {className: "separator"}, " : "),
 
-    React.createElement("select", {onChange: this.changeMinute, id: this.props.prefix+"-minute-menu", class: "minute-menu", className: "minute-menu"},
-    React.createElement("option", {selected: "selected"}, "minute"),
-    minutes.map(function(num, i) {
-      return React.createElement("option", {key: i, href: "#"}, (num >= 10) ? num.toString() : "0"+num)
-    }.bind(this))
+    React.createElement("div", {className: "minute-ten-menu"},
+    React.createElement("button", {onClick: this.changeMinuteTen.bind(null, true), className: "minute-ten-up"}, "^"),
+    React.createElement("div", {id: this.props.prefix+"-minute-ten-display", className: "minute-ten-display"}, this.state.minuteTen),
+    React.createElement("button", {onClick: this.changeMinuteTen.bind(null, false), className: "minute-ten-down"}, "v")
     ),
 
-    React.createElement("span", null, " "),
+    React.createElement("div", {className: "minute-one-menu"},
+    React.createElement("button", {onClick: this.changeMinuteOne.bind(null, true), className: "minute-one-up"}, "^"),
+    React.createElement("div", {id: this.props.prefix+"-minute-one-display", className: "minute-one-display"}, this.state.minuteOne),
+    React.createElement("button", {onClick: this.changeMinuteOne.bind(null, false), className: "minute-one-down"}, "v")
+    ),
 
-    React.createElement("select", {onChange: this.changeMeridiem, id: this.props.prefix+"-meridiem-menu", class: "meridiem-menu", className: "meridiem-menu"},
-      React.createElement("option", {selected: "selected"}, "am/pm"),
-      React.createElement("option", {href: "#"}, "am"),
-      React.createElement("option", {href: "#"}, "pm")
+    React.createElement("div", {className: "meridiem-menu"},
+    React.createElement("button", {onClick: this.changeMeridiem, className: "meridiem-up"}, "^"),
+    React.createElement("div", {id: this.props.prefix+"-meridiem-display", className: "meridiem-display"}, this.state.meridiem ? "pm" : "am"),
+    React.createElement("button", {onClick: this.changeMeridiem, className: "meridiem-down"}, "v")
     )
   );
   }
