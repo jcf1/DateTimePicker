@@ -1,3 +1,4 @@
+//Utility functions
 var Utilities = {
   clone: function(date) {
     return new Date(date.getFullYear(), date.getMonth(), date.getDate(), date.getHours(), date.getMinutes(), date.getSeconds(), date.getMilliseconds());
@@ -30,17 +31,39 @@ var Utilities = {
 
   equalMeeting: function(meeting1, meeting2) {
     return (meeting1.startDate === meeting2.startDate) && (meeting1.endDate === meeting2.endDate) && (meeting1.english === meeting2.english);
+  },
+
+  makeEnglish(startDate, endDate, comment) {
+    moment.locale('meet', {
+    calendar : {
+        lastDay : '[Yesterday at] LT',
+        sameDay : '[Today at] LT',
+        nextDay : '[Tomorrow at] LT',
+        lastWeek : '[last] dddd [at] LT',
+        nextWeek : 'dddd [at] LT',
+        sameElse : 'llll'
+    }
+    });
+
+    var startMoment = moment(startDate),
+    endMoment = moment(endDate);
+
+    if(startDate.getDate() === endDate.getDate())
+      return comment + " on " + startMoment.calendar() + " - " + endMoment.format('LT');
+
+    return comment + " from " + startMoment.calendar() + " - " + endMoment.calendar();
   }
 };
+
+/*********************************************************/
+//DateTimePicker Code
 
 var DateTimePicker = React.createClass({
 
   getInitialState: function() {
     return{
       startDate: null,
-      endDate: null,
-      english: "",
-      comment: ""
+      endDate: null
     };
   },
 
@@ -53,25 +76,24 @@ var DateTimePicker = React.createClass({
     this.refs.meetingList.toggle();
   },
 
-  addMeeting: function(translation) {
+  addMeeting: function(sDate, eDate, comm) {
     this.refs.timePicker.hide();
 
     var meeting = {
-      startDate: Utilities.clone(this.state.startDate),
-      endDate: Utilities.clone(this.state.endDate),
-      english: translation,
-      comment: this.state.comment
+      startDate: Utilities.clone(sDate),
+      endDate: Utilities.clone(eDate),
+      comment: comm
     };
     this.refs.meetingList.addMeeting(meeting);
 
-    console.log(this.state.startDate+" "+this.state.endDate+" "+this.state.english+" "+this.state.comment);
+    console.log(this.state.startDate+" "+this.state.endDate+" "+this.state.comment);
 
     this.refs.mainMenu.show();
     this.reset();
   },
 
   reset: function() {
-    this.setState({startDate: null, endDate: null, english: "", comment: ""});
+    this.setState({startDate: null, endDate: null, comment: ""});
     this.refs.timePicker.reset();
     this.refs.datePicker.reset();
   },
@@ -82,28 +104,8 @@ var DateTimePicker = React.createClass({
 
     this.setState({startDate: sDate, endDate: eDate});
 
-    console.log(sDate);
-    console.log(eDate);
-
     this.refs.datePicker.hide();
     this.refs.timePicker.show();
-  },
-
-  setStartTime: function(startHour, startMinute) {
-    this.setState({startDate: new Date(this.state.startDate.getFullYear(), this.state.startDate.getMonth(), this.state.startDate.getDate(), startHour, startMinute)});
-  },
-
-  setEndTime: function(endHour, endMinute) {
-    this.setState({endDate: new Date(this.state.endDate.getFullYear(), this.state.endDate.getMonth(), this.state.endDate.getDate(), endHour, endMinute)});
-  },
-
-  setEnglish: function(translation) {
-    console.log(translation.valueOf());
-    this.setState({english: this.state.english + translation.valueOf()});
-  },
-
-  setComment: function(comm) {
-    this.setState({comment: comm});
   },
 
   closeDatePicker: function() {
@@ -115,7 +117,7 @@ var DateTimePicker = React.createClass({
     return React.createElement("div", {className: "date-time-picker"},
     React.createElement(MainMenu, {ref: "mainMenu", makeMeeting: this.makeMeeting, showMeetings: this.showMeetings}),
     React.createElement(DatePicker, {ref: "datePicker", startDate: null, endDate: null, setDates: this.setDates, closeDatePicker: this.closeDatePicker}),
-    React.createElement(TimePicker, {ref: "timePicker", startDate: this.state.startDate, endDate: this.state.endDate, addMeeting: this.addMeeting, setStartTime: this.setStartTime, setEndTime: this.setEndTime, setEnglish: this.setEnglish, setComment: this.setComment}),
+    React.createElement(TimePicker, {ref: "timePicker", startDate: this.state.startDate, endDate: this.state.endDate, addMeeting: this.addMeeting}),
     React.createElement(MeetingList, {ref: "meetingList"})
   );
   }
@@ -176,17 +178,62 @@ var MeetingList = React.createClass({
     })});
   },
 
+  compareStartDate: function(a,b) {
+  if (a.startDate < b.startDate)
+    return -1;
+  else if (a.startDate > b.startDate)
+    return 1;
+  else
+    return 0;
+  },
+
+  compareEndDate: function(a,b) {
+  if (a.endDate < b.endDate)
+    return -1;
+  else if (a.endDate > b.endDate)
+    return 1;
+  else
+    return 0;
+  },
+
+  compareComment: function(a,b) {
+  if (a.comment < b.comment)
+    return -1;
+  else if (a.comment > b.comment)
+    return 1;
+  else
+    return 0;
+  },
+
+  changeSort: function() {
+    if(document.getElementById("sort-menu").value === "Start Date"){
+      this.setState({meetings: this.state.meetings.sort(this.compareStartDate)});
+    } else if(document.getElementById("sort-menu").value === "End Date"){
+      this.setState({meetings: this.state.meetings.sort(this.compareEndDate)});
+    } else if(document.getElementById("sort-menu").value === "Comment"){
+      this.setState({meetings: this.state.meetings.sort(this.compareComment)});
+    }
+  },
+
   render: function() {
     if(this.state.shouldHide) return null;
 
     return React.createElement("div", {className: "meeting-list"},
+    React.createElement("span", null, "Sort by: "),
+    React.createElement("select", {onChange: this.changeSort, id: "sort-menu", class: "sort-menu", className: "sort-menu"},
+      React.createElement("option", {href: "#"}, "Start Date"),
+      React.createElement("option", {href: "#"}, "End Date"),
+      React.createElement("option", {href: "#"}, "Comment")
+    ),
+
+    React.createElement("fieldset", {className: "meeting-area"},
     this.state.meetings.map( function(meeting, i) {
-      return React.createElement("div", null,
-      React.createElement("span", null, meeting.english),
-      //React.createElement("button", {onClick: this.edit.bind(null, meeting)}, "Edit"),
-      React.createElement("button", {onClick: this.delete.bind(null, meeting)}, "Delete")
+      return React.createElement("div", {className:"meeting"},
+      React.createElement("span", null, Utilities.makeEnglish(meeting.startDate, meeting.endDate, meeting.comment)),
+      React.createElement("button", {className: "delete-button", onClick: this.delete.bind(null, meeting)}, "Delete")
       )
     }.bind(this))
+    )
     );
   }
 });
@@ -246,7 +293,6 @@ var TimePicker = React.createClass({
 
   handleTextChange: function(e) {
     this.setState({comment: e.target.value});
-    console.log(e.target.value);
   },
 
   show: function() {
@@ -255,23 +301,6 @@ var TimePicker = React.createClass({
 
   hide: function() {
     this.setState({shouldHide: true});
-  },
-
-  isValidTimeslot: function() {
-    var sHour = this.state.startHour + (this.state.startMeridiem ? 12 : 0),
-    eHour = this.state.endHour + (this.state.endMeridiem ? 12 : 0);
-
-    var sDate = new Date(this.props.startDate.getFullYear(), this.props.startDate.getMonth(), this.props.startDate.getDate(), sHour, this.state.startMinute),
-    eDate = new Date(this.props.endDate.getFullYear(), this.props.endDate.getMonth(), this.props.endDate.getDate(), eHour, this.state.endMinute);
-
-    return sDate <= eDate
-  },
-
-  makeEnglish() {
-    var startString = Utilities.dateToString(this.props.startDate) + " at " + this.state.startHour + ":" + (this.state.startMinute < 10 ? "0"+this.state.startMinute : this.state.startMinute) + " " + (this.state.startMeridiem ? "pm" : "am"),
-    endString = Utilities.dateToString(this.props.endDate) + " at " + this.state.endHour + ":" + (this.state.endMinute < 10 ? "0"+this.state.endMinute : this.state.endMinute) + " " + (this.state.endMeridiem ? "pm." : "am.");
-
-    return this.state.comment + " from " + startString + " - " + endString;
   },
 
   makeMeeting() {
@@ -287,26 +316,22 @@ var TimePicker = React.createClass({
       return;
     }
 
-    console.log(this.props.startDate);
-    console.log(this.props.endDate);
+    var sHour = this.state.startHour + (this.state.startMeridiem ? 12 : 0),
+    eHour = this.state.endHour + (this.state.endMeridiem ? 12 : 0);
 
-    if(!this.isValidTimeslot()){
-      alert("*Start time cannot begin after end time.");
+    var sDate = new Date(this.props.startDate.getFullYear(), this.props.startDate.getMonth(), this.props.startDate.getDate(), sHour, this.state.startMinute),
+    eDate = new Date(this.props.endDate.getFullYear(), this.props.endDate.getMonth(), this.props.endDate.getDate(), eHour, this.state.endMinute);
+
+    console.log("start date: "+sDate);
+    console.log("end date: "+eDate);
+
+    if(sDate > eDate){
+      alert("* Start time cannot begin after end time.");
       return;
     }
 
-    var translation = this.makeEnglish();
-    this.props.setEnglish(translation);
-    this.props.setComment(new String(this.state.comment));
-
-    var sHour = this.state.startHour + (this.state.startMeridiem ? 12 : 0);
-    this.props.setStartTime(sHour, this.state.startMinute);
-
-    var eHour = this.state.endHour + (this.state.endMeridiem ? 12 : 0);
-    this.props.setEndTime(sHour, this.state.startMinute);
-
-    this.props.addMeeting(translation);
-    alert(translation);
+    this.props.addMeeting(sDate, eDate, this.state.comment);
+    alert(Utilities.makeEnglish(sDate, eDate, this.state.comment));
   },
 
   render: function() {
@@ -513,7 +538,6 @@ var Calendar = React.createClass({
 
   onMove: function(date) {
     this.setState({view: Utilities.clone(date)});
-    console.log(date.toString());
 
     this.refs.monthHeader.enable();
   },
