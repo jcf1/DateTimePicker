@@ -1,24 +1,23 @@
-div.clock {
-    position: relative;
-    display: inline-block;
-}
-
-div.date-time-picker {
-
-}
-
 div.date-time-picker div.meeting-list fieldset.meeting-area {
+  width: 500px;
 }
 
 div.date-time-picker div.meeting-list div.meeting {
   font-size: 18px;
   font-family: "Times New Roman";
   height: 24px;
+  width: 700px;
   outline: #244152 solid thin;
 }
 
-div.date-time-picker div.meeting-list button.delete-button {
-  height: 20px;
+div.date-time-picker div.meeting-list div.meeting span.meeting-label {
+  float: left;
+  width: 600px;
+}
+
+div.date-time-picker div.meeting-list div.meeting button.delete-button {
+  float: left;
+  height: 24px;
   width: 100px;
   background: #ffff00;
   outline: #244152 solid thin;
@@ -36,6 +35,8 @@ div.time-picker span.end-time-label {
 
 div.time-picker div.clock {
   width: 500px;
+  position: relative;
+  display: inline-block;
 }
 
 div.time-picker div.clock div.hour-menu {

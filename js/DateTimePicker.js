@@ -73,6 +73,7 @@ var DateTimePicker = React.createClass({
   },
 
   showMeetings: function() {
+    this.refs.meetingList.initSort();
     this.refs.meetingList.toggle();
   },
 
@@ -85,8 +86,6 @@ var DateTimePicker = React.createClass({
       comment: comm
     };
     this.refs.meetingList.addMeeting(meeting);
-
-    console.log(this.state.startDate+" "+this.state.endDate+" "+this.state.comment);
 
     this.refs.mainMenu.show();
     this.reset();
@@ -151,7 +150,7 @@ var MainMenu = React.createClass({
 
     return React.createElement("div", {className: "meeting-menu"},
     React.createElement("button", {className: "make-buton", disabled: this.state.isDisabled, onClick: this.props.makeMeeting}, "Make a Meeting."),
-    React.createElement("button", {className: "show-meetings-buton", onClick: this.showMeetings}, "Show Meetings.")
+    React.createElement("button", {className: "show-meetings-buton", onClick: this.showMeetings}, this.state.isDisabled ? "Hide Meetings." : "Show Meetings.")
     );
   }
 });
@@ -176,6 +175,10 @@ var MeetingList = React.createClass({
     this.setState({meetings: this.state.meetings.filter(function(i) {
       return !Utilities.equalMeeting(i, meeting);
     })});
+  },
+
+  initSort: function() {
+    this.setState({meetings: this.state.meetings.sort(this.compareStartDate)});
   },
 
   compareStartDate: function(a,b) {
@@ -229,7 +232,7 @@ var MeetingList = React.createClass({
     React.createElement("fieldset", {className: "meeting-area"},
     this.state.meetings.map( function(meeting, i) {
       return React.createElement("div", {className:"meeting"},
-      React.createElement("span", null, Utilities.makeEnglish(meeting.startDate, meeting.endDate, meeting.comment)),
+      React.createElement("span", {className:"meeting-label"}, Utilities.makeEnglish(meeting.startDate, meeting.endDate, meeting.comment)),
       React.createElement("button", {className: "delete-button", onClick: this.delete.bind(null, meeting)}, "Delete")
       )
     }.bind(this))
@@ -344,9 +347,6 @@ var TimePicker = React.createClass({
 
     var sDate = new Date(this.props.startDate.getFullYear(), this.props.startDate.getMonth(), this.props.startDate.getDate(), sHour, this.state.startMinute),
     eDate = new Date(this.props.endDate.getFullYear(), this.props.endDate.getMonth(), this.props.endDate.getDate(), eHour, this.state.endMinute);
-
-    console.log("start date: "+sDate);
-    console.log("end date: "+eDate);
 
     if(sDate > eDate){
       alert("* Start time cannot begin after end time.");
