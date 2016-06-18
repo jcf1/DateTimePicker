@@ -33,6 +33,16 @@ div.time-picker span.end-time-label {
   font-size: 24px;
 }
 
+div.time-picker span.start-date-time-label {
+  font-family: "Times New Roman";
+  font-size: 24px;
+}
+
+div.time-picker span.end-date-time-label {
+  font-family: "Times New Roman";
+  font-size: 24px;
+}
+
 div.time-picker div.clock {
   width: 500px;
   position: relative;
@@ -198,11 +208,12 @@ div.date-picker span.end-date-label {
 }
 div.date-picker div.calendar {
   position: absolute;
+  font-family: "Comic sans MS";
   z-index: 10;
   background: white;
   width: 800px;
   padding: 5px;
-  color: #244152;
+  color: black;
   border-radius: 3px;
   height: 420px;
   outline: #244152 solid thin;
@@ -211,9 +222,7 @@ div.date-picker div.calendar {
 div.date-picker div.calendar div.month-header {
   float: left;
   width: 100%;
-  display: -webkit-flex;
   display: flex;
-  -webkit-justify-content: space-between;
   justify-content: space-between;
   align-items: center;
 }
@@ -239,7 +248,7 @@ div.date-picker div.calendar div.week-header > span {
   width: 14%;
   font-size: 0.6em;
   text-transform: uppercase;
-  color: #026aa7;
+  color: #000099;
   font-weight: bold;
   text-align: center;
 }

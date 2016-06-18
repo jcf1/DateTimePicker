@@ -360,11 +360,16 @@ var TimePicker = React.createClass({
   render: function() {
     if(this.state.shouldHide) return null;
 
+    var startMoment = moment(new Date(this.props.startDate.getFullYear(), this.props.startDate.getMonth(), this.props.startDate.getDate())),
+    endMoment = moment(new Date(this.props.endDate.getFullYear(), this.props.endDate.getMonth(), this.props.endDate.getDate()));
+
     return React.createElement("div", {className: "time-picker"},
     React.createElement("span", {className: "start-time-label"}, "Enter Start Time:  "),
+    React.createElement("span", {className: "start-date-time-label"}, startMoment.format('LL') + " at "),
     React.createElement(StartClock, {hour: this.state.startHour, minute: this.state.startMinute, meridiem: this.state.startMeridiem, setHour: this.setStartHour, setMinute: this.setStartMinute, setMeridiem: this.setStartMeridiem}),
     React.createElement("br", null),
     React.createElement("span", {className: "end-time-label"}, "Enter End Time  :  "),
+    React.createElement("span", {className: "end-date-time-label"}, endMoment.format('LL') + " at "),
     React.createElement(EndClock, {hour: this.state.endHour, minute: this.state.endMinute, meridiem: this.state.endMeridiem, setHour: this.setEndHour, setMinute: this.setEndMinute, setMeridiem: this.setEndMeridiem}),
     React.createElement("br", null),
     React.createElement("span", null, "Enter Comment   :  "),
@@ -730,7 +735,7 @@ var Row = React.createClass({
   },
 
   onSelect: function(day) {
-    if(this.props.current <= day && this.props.view.getMonth() === day.getMonth())
+    if(this.props.view.getMonth() === day.getMonth())
       this.props.onSelect(day);
   },
 
